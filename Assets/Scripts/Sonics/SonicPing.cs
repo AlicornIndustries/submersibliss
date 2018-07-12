@@ -1,9 +1,14 @@
 ﻿using UnityEngine;
 
+public enum PingSource { Player, PlayerTool, Enemy, Ambient };
+
 public class SonicPing : MonoBehaviour
 {
-    public float lifespan = 1.2f;
-    public float innerRadius = 0; // outerRadius determined by the sphere collider. IGNORED FOR NOW
+    public PingSource pingSource;
+
+    public float expandTime = 1.2f;
+    public float lifespan = 1.5f;
+    //public float innerRadius = 0; // outerRadius determined by the sphere collider. IGNORED FOR NOW
     public SphereCollider outerSphere; // component of SonicPing object
     public GameObject gfx;
 
@@ -14,13 +19,17 @@ public class SonicPing : MonoBehaviour
 
     private void Update()
     {
-        //outerSphere.radius += speed;
-        //gfx.transform.localScale += new Vector3(2 * speed, 0, 2 * speed);
-        transform.localScale += new Vector3(speed, 0, speed);
-        innerRadius += speed;
         lifespan -= Time.deltaTime;
+        if (expandTime >= 0)
+        {
+            expandTime -= Time.deltaTime;
+            transform.localScale += new Vector3(speed, 0, speed);
+        }
         if (lifespan <= 0)
         {
+            // We want this to linger a bit after reaching end of life. Make it a max scale to reach, then have it "hang" for a bit
+            // while the inner edge (purely a GFX thing) advances?
+            // Or... just call it "lifespanHang" and that's when it stops expanding
             Destroy(gameObject);
         }
     }
@@ -36,7 +45,7 @@ public class SonicPing : MonoBehaviour
             //{
             //    sonicDetectable.OnPing();
             //}
-            sonicDetectable.OnPing();
+            sonicDetectable.OnPing(pingSource, transform.position);
         }
     }
 }

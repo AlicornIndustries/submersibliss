@@ -44,6 +44,12 @@ public class PlayerController : MonoBehaviour {
 
         // TORPEDOES
         ControlFire();
+
+        // SONAR
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            sonicEmitter.EmitPing();
+        }
     }
 
     // Launch torpedoes

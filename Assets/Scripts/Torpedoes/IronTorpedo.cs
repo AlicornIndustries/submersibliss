@@ -5,8 +5,9 @@ public class IronTorpedo : Torpedo {
     // launchForce = 10f
     public float explosionRadius = 5f;
     public float explosionForce = 1f;
-    public float reloadTime = 2f; // TODO: integrate this better
+    //public float reloadTime = 2f; // TODO: integrate this better
 
+    private int damage = 20;
     private bool hasExploded = false;
 
     private void Start()
@@ -37,6 +38,13 @@ public class IronTorpedo : Torpedo {
             {
                 rb.AddExplosionForce(explosionForce,transform.position,explosionRadius);
             }
+            // Apply damage
+            Enemy enemy = (Enemy)nearbyObject.gameObject.GetComponent(typeof(Enemy));
+            if(enemy != null)
+            {
+                enemy.TakeHit(damage);
+            }
+            
         }
         Destroy(gameObject);
     }
