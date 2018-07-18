@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class Enemy : MonoBehaviour {
 
@@ -13,26 +14,41 @@ public class Enemy : MonoBehaviour {
 
     public List<Transform> waypoints = new List<Transform>();
     private int waypointIndex = 0;
-    private float reachProximitySqr = 0.1f;
+    private float reachProximitySqr = 2f;
     private float angleThreshold = 0.99f; // How close to exactly facing does the ship need to be before it proceeds with AdvanceTowards?
 
-    public float patrolSpeed;
+    public float patrolSpeed; // these will override NavMeshAgent settings
     public float aggroSpeed;
-    public float turnSpeed;
+    public float angularSpeed;
     //public float moveForce;
     //public float turnTorque;
+
+    public float startOrbitDistance;
+    private float startOrbitDistanceSqr;
+    public float keepOrbitDistance;
+    private float keepOrbitDistanceSqr;
+    public float minOrbitDistance;
+    private float minOrbitDistanceSqr;
 
     public int maxHealth;
     private int currentHealth;
 
     private SonicDetectable sonicDetectable;
+    private NavMeshAgent agent;
 
 
 
 	private void Start () {
         sonicDetectable = (SonicDetectable)GetComponent(typeof(SonicDetectable));
+        agent = (NavMeshAgent)GetComponent(typeof(NavMeshAgent));
         currentHealth = maxHealth;
         knowledgeLevel = KnowledgeLevel.Unaware;
+
+        agent.speed = patrolSpeed;
+        agent.angularSpeed = angularSpeed;
+
+        keepOrbitDistanceSqr = keepOrbitDistance * keepOrbitDistance;
+
 	}
 
     private void Update()
@@ -40,24 +56,27 @@ public class Enemy : MonoBehaviour {
         if(knowledgeLevel == KnowledgeLevel.Unaware)
         {
             // Patrol
-            AdvanceTowards(waypoints[waypointIndex].position, patrolSpeed);
+            //AdvanceTowards(waypoints[waypointIndex].position, patrolSpeed);
+            SetDestination(waypoints[waypointIndex].position, patrolSpeed);
         }
         else if(knowledgeLevel == KnowledgeLevel.KnowsPresence)
         {
             // Still patrol?
-            AdvanceTowards(waypoints[waypointIndex].position, patrolSpeed);
+            //AdvanceTowards(waypoints[waypointIndex].position, patrolSpeed);
+            SetDestination(waypoints[waypointIndex].position, patrolSpeed);
         }
         else if(knowledgeLevel == KnowledgeLevel.KnowsLastLocation)
         {
-            AdvanceTowards(playerLastLocation, patrolSpeed);
+            OrbitLocation(playerLastLocation);
         }
         else if(knowledgeLevel == KnowledgeLevel.KnowsExactLocation)
         {
-            //
+            // Only if player is within a static ping?
+            OrbitLocation(playerLastLocation);
         }
 
         // Check to see if we reached a waypoint
-        if (knowledgeLevel <= KnowledgeLevel.KnowsExactLocation) // TODO: Make this an isPatrolling check?
+        if (knowledgeLevel <= KnowledgeLevel.KnowsPresence) // TODO: Make this an isPatrolling check?
         {
             Vector3 offset = waypoints[waypointIndex].position - transform.position;
             float sqrLen = offset.sqrMagnitude;
@@ -92,16 +111,14 @@ public class Enemy : MonoBehaviour {
 
     #endregion
 
-    #region AI
+    #region Sonics
 
     public void OnPing(PingSource pingSource, Vector3 pingOrigin)
     {
-        Debug.Log("Pinged!");
         if(pingSource == PingSource.Player)
         {
             // Detect player
-            Debug.Log("Player detected!");
-            knowledgeLevel = KnowledgeLevel.KnowsLastLocation; // TODO: make this just KnowsPresence, and make it patrol in a circle to try and find target
+            knowledgeLevel = KnowledgeLevel.KnowsLastLocation;
             playerLastLocation = pingOrigin;
         }
     }
@@ -110,38 +127,80 @@ public class Enemy : MonoBehaviour {
 
     #region Navigation
 
-    // TODO: Make these use rigidbody instead
-
-    private void AdvanceTowards(Vector3 location, float speed)
+    private void SetDestination(Vector3 destination, float speed)
     {
-        
-        // First turn to face
-        if(!IsFacing(location))
-        {
-            Debug.Log("is not facing");
-            Vector3 targetDirection = location - transform.position;
-            Vector3 newDirection = Vector3.RotateTowards(transform.forward, targetDirection, turnSpeed * Time.deltaTime, 0.0f);
-            transform.rotation = Quaternion.LookRotation(newDirection);
-        }
-        // If we're already facing
-        else
-        {
-            transform.position = Vector3.MoveTowards(transform.position, location, speed * Time.deltaTime);
-        }
+        agent.speed = speed;
+        agent.SetDestination(destination);
     }
 
-    private bool IsFacing(Vector3 location)
+    // TODO: Make this beautiful and working.
+    private void OrbitLocation(Vector3 location)
     {
-        float dot = Vector3.Dot(transform.forward, (location - transform.position).normalized);
-        if(dot>angleThreshold)
+        Vector3 offset = location - transform.position;
+        Debug.DrawLine(transform.position, transform.position + offset);
+        float offsetSqr = offset.sqrMagnitude;
+
+        // Too far, move closer
+        if (offsetSqr > keepOrbitDistanceSqr)
         {
-            return true;
+            agent.SetDestination(location);
+        }
+        else if (offsetSqr < minOrbitDistanceSqr)
+        {
+            // Move away
         }
         else
         {
-            return false;
+            // Circle
+            Vector3 rotatedVector = Quaternion.Euler(0, 15f, 0) * -offset; // TODO: optimize this
+            Debug.DrawLine(location, location + rotatedVector);
+            agent.SetDestination(location + rotatedVector);
         }
+
     }
+
+    private Vector3 RotateBy30Degrees(Vector3 vector)
+    {
+        //return new Vector3(
+        //    (vector.x * COS_30) - (vector.z * SIN_30),
+        //    0f,
+        //    (vector.x * SIN_30) + (vector.z * COS_30));
+        return new Vector3(
+            (vector.x * 0.86602540378f) - (vector.z * 0.5f),
+            0f,
+            (vector.x * 0.5f) + (vector.z * 0.86602540378f));
+    }
+
+    //private void AdvanceTowards(Vector3 location, float speed)
+    //{
+
+    //    // First turn to face
+    //    if(!IsFacing(location))
+    //    {
+    //        Debug.Log("is not facing");
+    //        Vector3 targetDirection = location - transform.position;
+    //        Vector3 newDirection = Vector3.RotateTowards(transform.forward, targetDirection, turnSpeed * Time.deltaTime, 0.0f);
+    //        transform.rotation = Quaternion.LookRotation(newDirection);
+    //    }
+    //    // If we're already facing
+    //    else
+    //    {
+    //        transform.position = Vector3.MoveTowards(transform.position, location, speed * Time.deltaTime);
+    //    }
+    //}
+
+    //private bool IsFacing(Vector3 location)
+    //{
+    //    float dot = Vector3.Dot(transform.forward, (location - transform.position).normalized);
+    //    if(dot>angleThreshold)
+    //    {
+    //        return true;
+    //    }
+    //    else
+    //    {
+    //        return false;
+    //    }
+    //}
 
     #endregion
 

@@ -39,7 +39,7 @@ GameObject:
   - component: {fileID: 114550604450426630}
   - component: {fileID: 135129051387194422}
   m_Layer: 0
-  m_Name: Sonic Ping
+  m_Name: Test Ping
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -125,8 +125,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3834540b585808844a7a027270023984, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pingSource: 0
+  expandTime: 1.2
   lifespan: 1.2
-  innerRadius: 0
   outerSphere: {fileID: 135129051387194422}
   gfx: {fileID: 1186237765314284}
 --- !u!135 &135129051387194422

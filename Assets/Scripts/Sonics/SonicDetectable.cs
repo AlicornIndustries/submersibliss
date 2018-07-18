@@ -24,7 +24,6 @@ public class SonicDetectable : MonoBehaviour {
     // Called when collides with a SonicPing sphere collider
     public void OnPing(PingSource pingSource, Vector3 pingOrigin) // see also https://stackoverflow.com/questions/2844899/how-to-get-global-access-to-enum-types-in-c for possible improvements
     {
-        Debug.Log("pinged!");
         BecomeAudible();
         if(isEnemy)
         {
