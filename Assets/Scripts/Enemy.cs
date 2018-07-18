@@ -17,6 +17,8 @@ public class Enemy : MonoBehaviour {
     private float reachProximitySqr = 2f;
     private float angleThreshold = 0.99f; // How close to exactly facing does the ship need to be before it proceeds with AdvanceTowards?
 
+    public ShipTurret[] turrets;
+
     public float patrolSpeed; // these will override NavMeshAgent settings
     public float aggroSpeed;
     public float angularSpeed;
@@ -68,11 +70,14 @@ public class Enemy : MonoBehaviour {
         else if(knowledgeLevel == KnowledgeLevel.KnowsLastLocation)
         {
             OrbitLocation(playerLastLocation);
+            Bombard(playerLastLocation);
         }
         else if(knowledgeLevel == KnowledgeLevel.KnowsExactLocation)
         {
             // Only if player is within a static ping?
             OrbitLocation(playerLastLocation);
+            // Bombard area with high spread. Call Bombard(location, spread)
+            Bombard(playerLastLocation);
         }
 
         // Check to see if we reached a waypoint
@@ -133,7 +138,6 @@ public class Enemy : MonoBehaviour {
         agent.SetDestination(destination);
     }
 
-    // TODO: Make this beautiful and working.
     private void OrbitLocation(Vector3 location)
     {
         Vector3 offset = location - transform.position;
@@ -159,48 +163,19 @@ public class Enemy : MonoBehaviour {
 
     }
 
-    private Vector3 RotateBy30Degrees(Vector3 vector)
+    #endregion
+
+    #region Shooting
+
+    private void Bombard(Vector3 location)
     {
-        //return new Vector3(
-        //    (vector.x * COS_30) - (vector.z * SIN_30),
-        //    0f,
-        //    (vector.x * SIN_30) + (vector.z * COS_30));
-        return new Vector3(
-            (vector.x * 0.86602540378f) - (vector.z * 0.5f),
-            0f,
-            (vector.x * 0.5f) + (vector.z * 0.86602540378f));
+        // Call ShootTarget on each turret
+        foreach(ShipTurret turret in turrets)
+        {
+            // TODO: add random spread as second arg
+            turret.ShootTarget(location);
+        }
     }
-
-    //private void AdvanceTowards(Vector3 location, float speed)
-    //{
-
-    //    // First turn to face
-    //    if(!IsFacing(location))
-    //    {
-    //        Debug.Log("is not facing");
-    //        Vector3 targetDirection = location - transform.position;
-    //        Vector3 newDirection = Vector3.RotateTowards(transform.forward, targetDirection, turnSpeed * Time.deltaTime, 0.0f);
-    //        transform.rotation = Quaternion.LookRotation(newDirection);
-    //    }
-    //    // If we're already facing
-    //    else
-    //    {
-    //        transform.position = Vector3.MoveTowards(transform.position, location, speed * Time.deltaTime);
-    //    }
-    //}
-
-    //private bool IsFacing(Vector3 location)
-    //{
-    //    float dot = Vector3.Dot(transform.forward, (location - transform.position).normalized);
-    //    if(dot>angleThreshold)
-    //    {
-    //        return true;
-    //    }
-    //    else
-    //    {
-    //        return false;
-    //    }
-    //}
 
     #endregion
 
