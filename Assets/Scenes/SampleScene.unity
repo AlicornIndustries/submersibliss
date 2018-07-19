@@ -907,8 +907,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88e433a6bbf900841a3619fd8cdbcae1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  barrel: {fileID: 0}
-  turnSpeed: 180
+  projectileEmitter: {fileID: 0}
+  turnSpeed: 1
+  hasFireOrder: 0
+  refireDelay: 0.1
+  timeLastFired: 0
 --- !u!1 &752640572
 GameObject:
   m_ObjectHideFlags: 0
@@ -987,7 +990,6 @@ MonoBehaviour:
   - {fileID: 2114616377}
   turrets:
   - {fileID: 606211300}
-  - {fileID: 1528201484}
   patrolSpeed: 8
   aggroSpeed: 10
   angularSpeed: 70
@@ -1370,7 +1372,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1528201484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1382,8 +1384,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88e433a6bbf900841a3619fd8cdbcae1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  barrel: {fileID: 0}
-  turnSpeed: 10
+  projectileEmitter: {fileID: 0}
+  turnSpeed: 1
+  hasFireOrder: 0
+  refireDelay: 0.1
+  timeLastFired: 0
 --- !u!54 &1528201485
 Rigidbody:
   m_ObjectHideFlags: 0

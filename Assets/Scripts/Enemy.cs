@@ -151,7 +151,7 @@ public class Enemy : MonoBehaviour {
         }
         else if (offsetSqr < minOrbitDistanceSqr)
         {
-            // Move away
+            // Move away TODO
         }
         else
         {
@@ -173,7 +173,12 @@ public class Enemy : MonoBehaviour {
         foreach(ShipTurret turret in turrets)
         {
             // TODO: add random spread as second arg
-            turret.ShootTarget(location);
+            // TODO: Only call ShootTarget on turrets that aren't already shooting
+            if(!turret.hasFireOrder)
+            {
+                turret.FireOrder(location);
+                
+            }
         }
     }
 
