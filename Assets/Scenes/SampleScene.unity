@@ -910,7 +910,7 @@ MonoBehaviour:
   projectileEmitter: {fileID: 0}
   turnSpeed: 1
   hasFireOrder: 0
-  refireDelay: 0.1
+  refireDelay: 2
   timeLastFired: 0
 --- !u!1 &752640572
 GameObject:
