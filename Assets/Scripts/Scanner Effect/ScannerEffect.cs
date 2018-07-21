@@ -5,7 +5,8 @@ using UnityEngine;
 public class ScannerEffect : MonoBehaviour {
     // Derived from Shaders Case Study - No Man's Sky: Topographic Scanner
 
-    public Transform ScannerOrigin;
+    public Transform ScannerOrigin1; // We can't use the sub for this, since the scan moves with the origin. We'll need to instantiate/object pool an empty transform each ping.
+    public Transform ScannerOrigin2;
     public Material EffectMaterial;
     public float ScanDistance;
     public float ScanSpeed;
@@ -61,10 +62,10 @@ public class ScannerEffect : MonoBehaviour {
     [ImageEffectOpaque]
     void OnRenderImage(RenderTexture src, RenderTexture dst)
     {
-        EffectMaterial.SetVector("_WorldSpaceScannerPos", ScannerOrigin.position);
+        ////EffectMaterial.SetVector("_WorldSpaceScannerPos", ScannerOrigin.position);
         // TODO: BIG IDEA:
-        // EffectMaterial.SetVector("_WorldSpaceScannerPos1",ScannerOrigin1.position);
-        // EffectMaterial.Setvector("_WorldSpaceScannerPos2,ScannerOrigin2.position);
+        EffectMaterial.SetVector("_WorldSpaceScannerPos1",ScannerOrigin1.position);
+        EffectMaterial.SetVector("_WorldSpaceScannerPos2",ScannerOrigin2.position);
         EffectMaterial.SetFloat("_ScanDistance", ScanDistance);
         RaycastCornerBlit(src, dst, EffectMaterial);
     }

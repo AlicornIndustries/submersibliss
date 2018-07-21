@@ -63,7 +63,8 @@
 			sampler2D _MainTex;
 			sampler2D _DetailTex;
 			sampler2D_float _CameraDepthTexture;
-			float4 _WorldSpaceScannerPos;
+			float4 _WorldSpaceScannerPos1;
+			float4 _WorldSpaceScannerPos2;
 			float _ScanDistance;
 			float _ScanWidth;
 			float _LeadSharp;
@@ -97,9 +98,9 @@
 				// Hardcode possibility for a set number of simultaneous pings.
 				// distFromClosest = min( distance(wsPos,_WorldSpaceScannerPos) for all scanner pos)
 				// distFromClosest = min( distance(origin1), distance(origin2), distance(origin3), ... )
-				float dist = distance(wsPos, _WorldSpaceScannerPos);
-				//float dist1 = distance(wsPos, _WorldSpaceScannerPos1);
-				//float dist2 = distance(wsPos, _WorldSpaceScannerPos2);
+				////float dist = distance(wsPos, _WorldSpaceScannerPos);
+				float dist1 = distance(wsPos, _WorldSpaceScannerPos1);
+				float dist2 = distance(wsPos, _WorldSpaceScannerPos2);
 				// We'll need to change ScannerEffect.cs for this.
 
 				// TODO: Make this work for multiple "scan distances" so we support multiple pings
@@ -109,10 +110,21 @@
 				// BIG IDEA:
 				// Allow for, let's say, 2 simultaneous pings. (in final, much more than that)
 				// we will have dist1, dist2
-				// if ( (dist1 < _ScanDistance && dist1 > _ScanDistance - _ScanWidth && linearDepth < 1) || (dist2 < _ScanDistance && dist2 > _ScanDistance - _ScanWidth && linearDepth < 1) )
-				if (dist < _ScanDistance && dist > _ScanDistance - _ScanWidth && linearDepth < 1)
+				//if ( ( dist1 < _ScanDistance && dist1 > _ScanDistance - _ScanWidth && linearDepth < 1 ) || ( dist2 < _ScanDistance && dist2 > _ScanDistance - _ScanWidth && linearDepth < 1 ) )
+				// What we really want is a foreach(Vector4 scannerPos in scannerPositions) { float dist = ... (if(dist < ...))}
+				// Where scannerPositions is a list of origins that can be dynamically resized whenever a new origin is instantiated/object pooled.
+				////if (dist < _ScanDistance && dist > _ScanDistance - _ScanWidth && linearDepth < 1)
+
+				if (dist1 < _ScanDistance && dist1 > _ScanDistance - _ScanWidth && linearDepth < 1)
 				{
-					float diff = 1 - (_ScanDistance - dist) / (_ScanWidth);
+					float diff = 1 - (_ScanDistance - dist1) / (_ScanWidth);
+					half4 edge = lerp(_MidColor, _LeadColor, pow(diff, _LeadSharp));
+					scannerCol = lerp(_TrailColor, edge, diff) + horizBars(i.uv) * _HBarColor;
+					scannerCol *= diff;
+				}
+				if (dist2 < _ScanDistance && dist2 > _ScanDistance - _ScanWidth && linearDepth < 1)
+				{
+					float diff = 1 - (_ScanDistance - dist2) / (_ScanWidth);
 					half4 edge = lerp(_MidColor, _LeadColor, pow(diff, _LeadSharp));
 					scannerCol = lerp(_TrailColor, edge, diff) + horizBars(i.uv) * _HBarColor;
 					scannerCol *= diff;
