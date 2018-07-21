@@ -9,14 +9,16 @@ public class ScannerEffect : MonoBehaviour {
     public Material EffectMaterial;
     public float ScanDistance;
     public float ScanSpeed;
+    public float ScanLifespan;
+    private float CurrentLifespan;
 
-    private Camera _camera;
+    public Camera _camera;
 
     private bool _scanning;
 
     private void OnEnable()
     {
-        _camera = GetComponent<Camera>();
+        //_camera = GetComponent<Camera>();
         _camera.depthTextureMode = DepthTextureMode.Depth;
     }
 
@@ -25,18 +27,44 @@ public class ScannerEffect : MonoBehaviour {
         if (_scanning)
         {
             ScanDistance += Time.deltaTime * ScanSpeed;
+            CurrentLifespan -= Time.deltaTime;
+            if(CurrentLifespan <= 0)
+            {
+                EndScan();
+            }
         }
 
+        // Start scan
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            _scanning = true;
+            StartScan();
         }
     }
+
+    private void StartScan()
+    {
+        ScanDistance = 0;
+        CurrentLifespan = ScanLifespan;
+        _scanning = true;
+    }
+
+    private void EndScan()
+    {
+        ScanDistance = 0;
+        _scanning = false;
+    }
+
+
+
+    #region Witchcraft
 
     [ImageEffectOpaque]
     void OnRenderImage(RenderTexture src, RenderTexture dst)
     {
         EffectMaterial.SetVector("_WorldSpaceScannerPos", ScannerOrigin.position);
+        // TODO: BIG IDEA:
+        // EffectMaterial.SetVector("_WorldSpaceScannerPos1",ScannerOrigin1.position);
+        // EffectMaterial.Setvector("_WorldSpaceScannerPos2,ScannerOrigin2.position);
         EffectMaterial.SetFloat("_ScanDistance", ScanDistance);
         RaycastCornerBlit(src, dst, EffectMaterial);
     }
@@ -102,4 +130,7 @@ public class ScannerEffect : MonoBehaviour {
         GL.End();
         GL.PopMatrix();
     }
+
+    #endregion
+
 }

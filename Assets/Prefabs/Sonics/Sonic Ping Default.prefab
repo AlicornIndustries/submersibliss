@@ -127,7 +127,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pingSource: 0
   expandTime: 1.2
-  lifespan: 1.2
+  lifespan: 1.5
   outerSphere: {fileID: 135605325453047810}
   gfx: {fileID: 1433337124859658}
 --- !u!135 &135605325453047810

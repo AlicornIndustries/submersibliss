@@ -17,6 +17,7 @@ public class SonicPing : MonoBehaviour
 
     private readonly float speed = 30f; // speed of sound, speed of expanding ping
 
+    // Make this a coroutine
     private void Update()
     {
         lifespan -= Time.deltaTime;
@@ -40,11 +41,6 @@ public class SonicPing : MonoBehaviour
         sonicDetectable = other.gameObject.GetComponent<SonicDetectable>();
         if(sonicDetectable)
         {
-            //distance = Vector3.Distance(other.transform.position, transform.position);
-            //if(distance >= innerRadius)
-            //{
-            //    sonicDetectable.OnPing();
-            //}
             sonicDetectable.OnPing(pingSource, transform.position);
         }
     }

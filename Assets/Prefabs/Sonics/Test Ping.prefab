@@ -78,7 +78,7 @@ MeshRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1186237765314284}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -127,7 +127,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pingSource: 0
   expandTime: 1.2
-  lifespan: 1.2
+  lifespan: 1.5
   outerSphere: {fileID: 135129051387194422}
   gfx: {fileID: 1186237765314284}
 --- !u!135 &135129051387194422

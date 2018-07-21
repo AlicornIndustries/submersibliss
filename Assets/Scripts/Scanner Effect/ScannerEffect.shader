@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-Shader "Hidden/ScannerEffect"
+﻿Shader "Hidden/ScannerEffect"
 {
 	Properties
 	{
@@ -90,12 +88,28 @@ Shader "Hidden/ScannerEffect"
 
 				float rawDepth = DecodeFloatRG(tex2D(_CameraDepthTexture, i.uv_depth));
 				float linearDepth = Linear01Depth(rawDepth);
-				float4 wsDir = linearDepth * i.interpolatedRay;
+				float4 wsDir = linearDepth * i.interpolatedRay; // direction in worldspace pointing from camera to far plane
 				float3 wsPos = _WorldSpaceCameraPos + wsDir;
 				half4 scannerCol = half4(0, 0, 0, 0);
 
+				// TODO: focus on this.
+				// Replace with distance from closest origin?
+				// Hardcode possibility for a set number of simultaneous pings.
+				// distFromClosest = min( distance(wsPos,_WorldSpaceScannerPos) for all scanner pos)
+				// distFromClosest = min( distance(origin1), distance(origin2), distance(origin3), ... )
 				float dist = distance(wsPos, _WorldSpaceScannerPos);
+				//float dist1 = distance(wsPos, _WorldSpaceScannerPos1);
+				//float dist2 = distance(wsPos, _WorldSpaceScannerPos2);
+				// We'll need to change ScannerEffect.cs for this.
 
+				// TODO: Make this work for multiple "scan distances" so we support multiple pings
+				// This is the crux of the matter
+				// We need to test this for multiple distances, so have a for(ping) {if ping.dist < ping._ScanDistance ...}
+
+				// BIG IDEA:
+				// Allow for, let's say, 2 simultaneous pings. (in final, much more than that)
+				// we will have dist1, dist2
+				// if ( (dist1 < _ScanDistance && dist1 > _ScanDistance - _ScanWidth && linearDepth < 1) || (dist2 < _ScanDistance && dist2 > _ScanDistance - _ScanWidth && linearDepth < 1) )
 				if (dist < _ScanDistance && dist > _ScanDistance - _ScanWidth && linearDepth < 1)
 				{
 					float diff = 1 - (_ScanDistance - dist) / (_ScanWidth);
