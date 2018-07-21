@@ -15,7 +15,7 @@ public class SonicPing : MonoBehaviour
     private SonicDetectable sonicDetectable; // will be the thing we collide with
     //private float distance;
 
-    private readonly float speed = 0.3f; // speed of sound, speed of expanding ping
+    private readonly float speed = 30f; // speed of sound, speed of expanding ping
 
     private void Update()
     {
@@ -23,7 +23,7 @@ public class SonicPing : MonoBehaviour
         if (expandTime >= 0)
         {
             expandTime -= Time.deltaTime;
-            transform.localScale += new Vector3(speed, 0, speed);
+            transform.localScale += new Vector3(speed*Time.deltaTime, 0, speed*Time.deltaTime);
         }
         if (lifespan <= 0)
         {
