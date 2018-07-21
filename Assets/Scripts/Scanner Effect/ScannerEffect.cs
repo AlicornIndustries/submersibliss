@@ -5,68 +5,88 @@ using UnityEngine;
 public class ScannerEffect : MonoBehaviour {
     // Derived from Shaders Case Study - No Man's Sky: Topographic Scanner
 
-    public Transform ScannerOrigin1; // We can't use the sub for this, since the scan moves with the origin. We'll need to instantiate/object pool an empty transform each ping.
-    public Transform ScannerOrigin2;
+    //public Transform ScannerOrigin1; // We can't use the sub for this, since the scan moves with the origin. We'll need to instantiate/object pool an empty transform each ping.
+    //public Transform ScannerOrigin2;
+    public static int numCircleScanners = 2;
+    public Transform[] circleScannerTransforms = new Transform[numCircleScanners];
+    public Vector4[] circleScannerPositions = new Vector4[numCircleScanners];
     public Material EffectMaterial;
-    public float ScanDistance;
+
+
+    //public float ScanDistance;  // carthago delenda est
+    public float[] circleScanDistances = new float[numCircleScanners];
     public float ScanSpeed;
-    public float ScanLifespan;
-    private float CurrentLifespan;
+    //public float ScanLifespan; // old
+    //private float CurrentLifespan; // old
+    public float[] circleScanLifespans = new float[numCircleScanners];
+    public float[] circleScanCurrentLifespans = new float[numCircleScanners];
+    public float[] circleScannings = new float[numCircleScanners]; // 0 if false, 1 if true. Shaders can't use bools or ints
 
     public Camera _camera;
 
-    private bool _scanning;
-
     private void OnEnable()
     {
-        //_camera = GetComponent<Camera>();
         _camera.depthTextureMode = DepthTextureMode.Depth;
     }
 
     private void Update()
     {
-        if (_scanning)
+        // Handle currently active scanners
+        for(int i = 0; i < numCircleScanners; i++)
         {
-            ScanDistance += Time.deltaTime * ScanSpeed;
-            CurrentLifespan -= Time.deltaTime;
-            if(CurrentLifespan <= 0)
+            if(circleScannings[i] > 0)
             {
-                EndScan();
+                circleScanDistances[i] += Time.deltaTime * ScanSpeed;
+                //ScanDistance += Time.deltaTime * ScanSpeed; // TODO
+                circleScanCurrentLifespans[i] -= Time.deltaTime;
+                if(circleScanCurrentLifespans[i] <= 0)
+                {
+                    EndScan(i);
+                }
             }
         }
 
-        // Start scan
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            StartScan();
-        }
+        // Move this into the objects that actually emit the scans, e.g. player sub calls ScannerEffect.StartScan(0) on hit Space, sonar buoys call ScannerEffect.StartScan(whatever)
+        //if(Input.GetKeyDown(KeyCode.Space))
+        //{
+        //    StartScan(0);
+        //}
+
+        //if(Input.GetKeyDown(KeyCode.Z))
+        //{
+        //    StartScan(1);
+        //}
     }
 
-    private void StartScan()
+    public void StartScan(int scannerIndex)
     {
-        ScanDistance = 0;
-        CurrentLifespan = ScanLifespan;
-        _scanning = true;
+        circleScanDistances[scannerIndex] = 0;
+        circleScanCurrentLifespans[scannerIndex] = circleScanLifespans[scannerIndex];
+        circleScannings[scannerIndex] = 1;
     }
 
-    private void EndScan()
+    private void EndScan(int scannerIndex)
     {
-        ScanDistance = 0;
-        _scanning = false;
+        circleScanDistances[scannerIndex] = 0;
+        //ScanDistance = 0;
+        circleScannings[scannerIndex] = 0;
     }
-
-
 
     #region Witchcraft
 
     [ImageEffectOpaque]
     void OnRenderImage(RenderTexture src, RenderTexture dst)
     {
-        ////EffectMaterial.SetVector("_WorldSpaceScannerPos", ScannerOrigin.position);
-        // TODO: BIG IDEA:
-        EffectMaterial.SetVector("_WorldSpaceScannerPos1",ScannerOrigin1.position);
-        EffectMaterial.SetVector("_WorldSpaceScannerPos2",ScannerOrigin2.position);
-        EffectMaterial.SetFloat("_ScanDistance", ScanDistance);
+        EffectMaterial.SetInt("_numCircleScanners", numCircleScanners);
+        // Need to convert Vector3 positions into Vector4 so we can assign the array to the shader
+        for (int i = 0; i < numCircleScanners; i++)
+        {
+            circleScannerPositions[i] = circleScannerTransforms[i].position; // implicitly converts to Vector4
+        }
+        EffectMaterial.SetVectorArray("_circleScannersWorldSpacePositions", circleScannerPositions);
+        EffectMaterial.SetFloatArray("_circleScannings", circleScannings);
+        EffectMaterial.SetFloatArray("_circleScanDistances", circleScanDistances);
+        //EffectMaterial.SetFloat("_ScanDistance", ScanDistance);
         RaycastCornerBlit(src, dst, EffectMaterial);
     }
 

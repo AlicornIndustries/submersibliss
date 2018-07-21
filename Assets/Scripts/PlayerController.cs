@@ -13,7 +13,7 @@ public class PlayerController : MonoBehaviour {
     public GameObject[] torpedoPrefabs;
     public int equippedTorpedoIndex = 0;
 
-    public SonicEmitter sonicEmitter;
+    public SonicEmitter sonicEmitter; // make this private
 
     private Rigidbody rb;
     private Collider coll;

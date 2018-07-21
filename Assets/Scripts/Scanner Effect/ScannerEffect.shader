@@ -11,6 +11,7 @@
 		_MidColor("Mid Color", Color) = (1, 1, 1, 0)
 		_TrailColor("Trail Color", Color) = (1, 1, 1, 0)
 		_HBarColor("Horizontal Bar Color", Color) = (0.5, 0.5, 0.5, 0)
+
 	}
 	SubShader
 	{
@@ -63,9 +64,13 @@
 			sampler2D _MainTex;
 			sampler2D _DetailTex;
 			sampler2D_float _CameraDepthTexture;
-			float4 _WorldSpaceScannerPos1;
-			float4 _WorldSpaceScannerPos2;
-			float _ScanDistance;
+			// NEW STUFF
+			int _numCircleScanners;
+			float4 _circleScannersWorldSpacePositions[2]; // we probably need to hardcode it like this, unfortunately. _numCircleScanners must never exceed this value
+			float _circleScannings[2]; // 0 if not scanning, 1 if scanning. Shaders can't use bools or ints
+			float _circleScanDistances[2];
+
+			//float _ScanDistance;
 			float _ScanWidth;
 			float _LeadSharp;
 			float4 _LeadColor;
@@ -92,44 +97,25 @@
 				float4 wsDir = linearDepth * i.interpolatedRay; // direction in worldspace pointing from camera to far plane
 				float3 wsPos = _WorldSpaceCameraPos + wsDir;
 				half4 scannerCol = half4(0, 0, 0, 0);
-
-				// TODO: focus on this.
-				// Replace with distance from closest origin?
-				// Hardcode possibility for a set number of simultaneous pings.
-				// distFromClosest = min( distance(wsPos,_WorldSpaceScannerPos) for all scanner pos)
-				// distFromClosest = min( distance(origin1), distance(origin2), distance(origin3), ... )
-				////float dist = distance(wsPos, _WorldSpaceScannerPos);
-				float dist1 = distance(wsPos, _WorldSpaceScannerPos1);
-				float dist2 = distance(wsPos, _WorldSpaceScannerPos2);
-				// We'll need to change ScannerEffect.cs for this.
-
-				// TODO: Make this work for multiple "scan distances" so we support multiple pings
-				// This is the crux of the matter
-				// We need to test this for multiple distances, so have a for(ping) {if ping.dist < ping._ScanDistance ...}
-
-				// BIG IDEA:
-				// Allow for, let's say, 2 simultaneous pings. (in final, much more than that)
-				// we will have dist1, dist2
-				//if ( ( dist1 < _ScanDistance && dist1 > _ScanDistance - _ScanWidth && linearDepth < 1 ) || ( dist2 < _ScanDistance && dist2 > _ScanDistance - _ScanWidth && linearDepth < 1 ) )
-				// What we really want is a foreach(Vector4 scannerPos in scannerPositions) { float dist = ... (if(dist < ...))}
-				// Where scannerPositions is a list of origins that can be dynamically resized whenever a new origin is instantiated/object pooled.
-				////if (dist < _ScanDistance && dist > _ScanDistance - _ScanWidth && linearDepth < 1)
-
-				if (dist1 < _ScanDistance && dist1 > _ScanDistance - _ScanWidth && linearDepth < 1)
+				
+				// NEW STUFF
+				// n instead of i because i is used in horizBars(i.uv);
+				for(int n = 0; n < _numCircleScanners; n++)
 				{
-					float diff = 1 - (_ScanDistance - dist1) / (_ScanWidth);
-					half4 edge = lerp(_MidColor, _LeadColor, pow(diff, _LeadSharp));
-					scannerCol = lerp(_TrailColor, edge, diff) + horizBars(i.uv) * _HBarColor;
-					scannerCol *= diff;
+					float isScanning = _circleScannings[n];
+					if(isScanning > 0) // if(_circleScannings[n] > 0) causes an error; apparently it's difficult to unroll
+					{
+						float dist = distance(wsPos, _circleScannersWorldSpacePositions[n]);
+						float _ScanDistance = _circleScanDistances[n];
+						if (dist < _ScanDistance && dist > _ScanDistance - _ScanWidth && linearDepth < 1 )
+						{
+							float diff = 1 - (_ScanDistance - dist) / (_ScanWidth);
+							half4 edge = lerp(_MidColor, _LeadColor, pow(diff, _LeadSharp));
+							scannerCol = lerp(_TrailColor, edge, diff) + horizBars(i.uv) * _HBarColor;
+							scannerCol *= diff;
+						}
+					}
 				}
-				if (dist2 < _ScanDistance && dist2 > _ScanDistance - _ScanWidth && linearDepth < 1)
-				{
-					float diff = 1 - (_ScanDistance - dist2) / (_ScanWidth);
-					half4 edge = lerp(_MidColor, _LeadColor, pow(diff, _LeadSharp));
-					scannerCol = lerp(_TrailColor, edge, diff) + horizBars(i.uv) * _HBarColor;
-					scannerCol *= diff;
-				}
-
 				return col + scannerCol;
 			}
 			ENDCG
